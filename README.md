@@ -61,7 +61,7 @@ LocalAI-WebUI یک رابط کاربری تحت وب ساده، کاربرپسن
 1. **Python** نسخه **۳.۸ یا بالاتر** ➝ [دانلود](https://www.python.org/downloads/)  
 2. **Visual Studio Code** ➝ [دانلود](https://code.visualstudio.com/Download)  
 3. **Ollama** (آخرین ورژن) ➝ [دانلود](https://ollama.com/download)  
-4. **مدل‌های مورد نیاز در Ollama**:  
+4. **مدل‌های مورد نیاز در مثل  Ollama**:  
    - `qwen2.5:1.5b`  
    - `deepseek-r2:1.5b`  
 
@@ -95,7 +95,7 @@ LocalAI-WebUI یک رابط کاربری تحت وب ساده، کاربرپسن
 
 ## **مدیریت خطاها**
 
-LocalAI-WebUI دارای **مدیریت جامع خطا** برای موارد زیر است:  
+این برنامه شامل مدیریت جامع خطا برای موارد زیر است:
 - **مشکلات اتصال به Ollama**.  
 - **انتخاب مدل‌های نامعتبر**.  
 - **سناریوهای Timeout**.  
