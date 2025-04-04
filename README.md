@@ -1,6 +1,6 @@
-# My-Gpt
+#LocalAI-WebUI | My-GPT
 هوش مصنوعی محلی با استفاده از Ollama و رابط کاربری (UI)
-# **LocalAI-WebUI**
+
 
 ## **معرفی پروژه**
 
