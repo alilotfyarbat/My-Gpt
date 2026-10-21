@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0084ff;
+            --secondary-color: #1a1a1a;
+            --background-light: #f0f2f5;
+            --background-dark: #242526;
+            --text-light: #050505;
+            --text-dark: #e4e6eb;
+            --sidebar-width: 320px;
+            --message-bg-user: #0084ff;
+            --message-bg-ai: #3a3b3c;
+            --hover-light: #e4e6e9;
+            --hover-dark: #3a3b3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-light);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--background-light);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode .sidebar {
+            background-color: var(--secondary-color);
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .sidebar-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .dark-mode .app-title {
+            color: var(--text-dark);
+        }
+
+        .new-chat-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #0073e6;
+        }
+
+        .model-select-container {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .model-select-container {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .model-select-container span {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+
+        .dark-mode .model-select-container span {
+            color: var(--text-dark);
+        }
+        
+        .model-checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .model-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            position: relative;
+        }
+        
+        .dark-mode .model-checkbox {
+            color: var(--text-dark);
+        }
+        
+        .model-checkbox:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .model-checkbox input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.3rem;
+            margin-right: 0.75rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark-mode .model-checkbox input[type="checkbox"] {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        
+        .model-checkbox input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .model-checkbox input[type="checkbox"]:checked::after {
+            content: '\2713';
+            position: absolute;
+            color: white;
+            font-size: 0.8rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .model-checkbox input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.3);
+        }
+
+        .model-select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background-color: var(--background-light);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .dark-mode .model-select {
+            background-color: var(--secondary-color);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-dark);
+        }
+
+        .model-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .dark-mode .history-item {
+            color: var(--text-dark);
+        }
+
+        .history-item:hover {
+            background-color: var(--hover-light);
+        }
+
+        .dark-mode .history-item:hover {
+            background-color: var(--hover-dark);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            max-width: calc(100% - var(--sidebar-width));
+            background-color: var(--background-light);
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode .main-content {
+            background-color: var(--background-dark);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            margin-bottom: 120px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0 0.5rem;
+        }
+
+        .message-bubble {
+            padding: 1rem 1.25rem;
+            border-radius: 1.25rem;
+            position: relative;
+            color: white;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .user .message-bubble {
+            background-color: var(--message-bg-user);
+            border-bottom-right-radius: 0.3rem;
+        }
+
+        .ai .message-bubble {
+            background-color: var(--message-bg-ai);
+            border-bottom-left-radius: 0.3rem;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            opacity: 0.7;
+            padding: 0 0.5rem;
+        }
+
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            padding: 1.5rem;
+            background-color: var(--background-light);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .dark-mode .input-area {
+            background-color: var(--background-dark);
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .input-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+        }
+
+        .dark-mode .input-container {
+            background-color: var(--secondary-color);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 1rem 4.5rem 1rem 1.25rem;
+            border: none;
+            border-radius: 1.5rem;
+            font-size: 1rem;
+            background-color: transparent;
+            color: var(--text-light);
+            resize: none;
+            max-height: 150px;
+            outline: none;
+        }
+
+        .dark-mode .message-input {
+            color: var(--text-dark);
+        }
+
+        .message-input::placeholder {
+            color: #65676b;
+        }
+
+        .dark-mode .message-input::placeholder {
+            color: #b0b3b8;
+        }
+
+        .input-buttons {
+            position: absolute;
+            right: 0.75rem;
+            bottom: 50%;
+            transform: translateY(50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            transition: transform 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+        }
+
+        .action-button:hover {
+            background-color: rgba(0, 132, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #65676b;
+            margin-top: 1rem;
+            padding: 0 1rem;
+        }
+
+        .dark-mode .copyright {
+            color: #b0b3b8;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+            }
+            .input-area {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="app-title">AI Chat</h1>
+                <button onclick="toggleDarkMode()" class="action-button">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i>
+                New Chat
+            </button>
+            <div class="model-select-container">
+                <div style="text-align: center;">
+                    <span>Select Models for Comparison</span>
+                </div>
+                <span>simple version of LLM</span>
+                <div class="model-checkbox-container">
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="qwen2.5:1.5b"> Qwen2.5:1.5b
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="deepseek-r1:1.5b"> Deepseek-r1:1.5b
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="gemma2:2b"> gemma2:2b
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="gemma3:1b"> gemma3:1b
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="llama3.2"> llama3.2
+                    </label>
+                    <label class="model-checkbox">
+                        <input type="checkbox" name="modelCheckbox" value="phi3:mini"> phi3:mini
+                    </label>
+                    <br>
+                </div>
+                <span>Pro version of LLM</span>
+                <label class="model-checkbox">
+                    <input type="checkbox" name="modelCheckbox" value="gemma3" class="hidden-checkbox">
+                    <span class="custom-checkbox"></span> 
+                    <span class="checkbox-label">gemma3:4.3b</span>
+                </label>
+                
+                <style>
+                    .hidden-checkbox {
+                        display: none; /* مخفی کردن چک باکس اصلی */
+                    }
+                
+                    .custom-checkbox {
+                        display: inline-block;
+                        width: 20px; /* عرض چک باکس سفارشی */
+                        height: 20px; /* ارتفاع چک باکس سفارشی */
+                        border: 2px solid red; /* رنگ حاشیه قرمز */
+                        border-radius: 3px; /* گوشه‌های گرد */
+                        margin-right: 8px; /* فاصله بین چک باکس و متن */
+                        vertical-align: middle; /* تراز عمودی */
+                        cursor: pointer; /* نشانگر ماوس */
+                    }
+                
+                    .hidden-checkbox:checked + .custom-checkbox {
+                        background-color: red; /* رنگ پس‌زمینه چک باکس سفارشی در حالت انتخاب */
+                    }
+                
+                    .checkbox-label {
+                        font-family: Arial, sans-serif; /* نوع فونت */
+                        font-size: 16px; /* سایز فونت */
+                        color: #333; /* رنگ متن */
+                        vertical-align: middle; /* تراز عمودی متن */
+                    }
+                </style>
+       </div>
+       <div style="text-align: center; font-size: 24px;">
+        <span>History</span>
+    </div>
+       <div class="chat-history" id="chatHistory">
+                <!-- Chat history items will be added here -->
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="chat-container" id="chatContainer">
+                <!-- Messages will be added here -->
+            </div>
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea
+                        id="userMessage"
+                        class="message-input"
+                        placeholder="Type your message..."
+                    ></textarea>
+                    <div class="input-buttons">
+                        <button onclick="clearChat()" class="action-button" title="Clear chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button onclick="sendMessage()" id="sendButton" class="action-button" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="copyright">
+                    Copyright by alilotfyarbat || این یک هوش مصنوعی محلی برای تست است
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        let chatHistory = [];
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const darkModeIcon = document.querySelector('.fa-moon');
+            darkModeIcon.classList.toggle('fa-sun');
+        }
+
+        function startNewChat() {
+            clearChat();
+            document.getElementById('userMessage').focus();
+        }
+
+        function clearChat() {
+            document.getElementById('chatContainer').innerHTML = '';
+            chatHistory = [];
+            updateChatHistory();
+        }
+
+        function updateChatHistory() {
+            const historyContainer = document.getElementById('chatHistory');
+            historyContainer.innerHTML = '';
+            
+            chatHistory.forEach((chat, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <i class="fas fa-message"></i>
+                    <span>${chat.message.substring(0, 30)}${chat.message.length > 30 ? '...' : ''}</span>
+                `;
+                historyContainer.appendChild(historyItem);
+            });
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+
+            const messageInput = document.getElementById('userMessage');
+            const message = messageInput.value.trim();
+            
+            // Get selected models from checkboxes
+            const selectedModels = [];
+            document.querySelectorAll('input[name="modelCheckbox"]:checked').forEach(checkbox => {
+                selectedModels.push(checkbox.value);
+            });
+            
+            if (!message) return;
+            if (selectedModels.length < 1) {
+                alert('Please select at least one model for comparison.');
+                return;
+            }
+
+            isProcessing = true;
+            document.getElementById('sendButton').innerHTML = '<div class="loading"></div>';
+            messageInput.value = '';
+            adjustTextareaHeight(messageInput);
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            chatHistory.push({ type: 'user', message, timestamp: new Date() });
+            updateChatHistory();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        models: selectedModels
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Add AI responses to chat for each model
+                if (data.responses) {
+                    Object.keys(data.responses).forEach(model => {
+                        addModelResponseToChat(model, generateBetterResponse(data.responses[model]));
+                    });
+                    
+                    // Add to chat history
+                    chatHistory.push({ 
+                        type: 'ai', 
+                        message: `Comparison between ${selectedModels.join(' and ')}`, 
+                        timestamp: new Date() 
+                    });
+                    updateChatHistory();
+                }
+            } catch (error) {
+                addMessageToChat('ai', 'Sorry, an error occurred while processing your request.');
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendButton').innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        function addMessageToChat(type, content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const name = type === 'user' ? 'Ali' : 'AI';
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${name}</span>
+                </div>
+                <div class="message-bubble">${content}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function addModelResponseToChat(model, content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ai`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${model}</span>
+                </div>
+                <div class="message-bubble">${content}</div>
+                <div class="message-timestamp">${timestamp}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function adjustTextareaHeight(element) {
+            element.style.height = 'auto';
+            element.style.height = Math.min(element.scrollHeight, 150) + 'px';
+        }
+
+        const messageInput = document.getElementById('userMessage');
+        
+        messageInput.addEventListener('input', function() {
+            adjustTextareaHeight(this);
+            document.getElementById('sendButton').disabled = !this.value.trim();
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (this.value.trim()) {
+                    sendMessage();
+                }
+            }
+        });
+
+        function generateBetterResponse(response) {
+            response = response.charAt(0).toUpperCase() + response.slice(1);
+            if (!response.endsWith('.') && !response.endsWith('!') && !response.endsWith('?')) {
+                response += '.';
+            }
+            response = response.replace(/(\w)(?=\s\w\.\s)/g, '$1,');
+            return response;
+        }
+
+        // Initialize
+        document.getElementById('sendButton').disabled = true;
+    </script>
+</body>
+</html>
